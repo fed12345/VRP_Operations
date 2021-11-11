@@ -38,7 +38,7 @@ u = m.addVars(clients,vtype = gp.GRB.CONTINUOUS,name='u')
 # Objective Function
 m.setObjective(gp.quicksum(c[i]*x[i]for i in nodes),gp.GBR.MINIMIZE)
 
-
+#adri
 
 
 
