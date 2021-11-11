@@ -3,8 +3,6 @@
 Created on Thu Nov 11 11:35:33 2021
 """
 
-
-
 import numpy as np
 import os
 import pandas as pd
@@ -40,7 +38,7 @@ m.setObjective(gp.quicksum(c[i]*x[i]for i in nodes),gp.GBR.MINIMIZE)
 
 #adri
 
-
+# fede
 
 
 
