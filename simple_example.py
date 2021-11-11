@@ -8,6 +8,7 @@ import os
 import pandas as pd
 import time
 import gurobipy as gp
+from gurobipy import GRB
 import pickle
 from copy import deepcopy
 
@@ -16,29 +17,25 @@ n = 7
 clients = [ i for i in range(n-1) if i !=0]
 nodes = [0]+clients+[n-1]
 
-# Weights
-depot = 10
-inner_loop = 5
 
-x = {'x01','x02','x05',
-     'x12','x13','x14',
-     'x15','x16','x23','x26',
-     'x34','x45','x56'}
-c = {'10','10','10','5','15','15','5','10','15','10','20','15','10'}
+arcs = [(0,1),(0,2), (0,5), (1,2),(1,3),(1,4),(1,5),(1,6),(2,3),(2,6),(3,4),(4,5),(5,6),(2,1),(3,1),(4,1),(5,1),(3,2),(4,3),(5,4)]
+cost = [11,10,10,5,15,15,5,10,15,10,20,15,10,5,15,15,5,15,20,15]
+c = { arcs[i]:  cost[i] for i in range(len(arcs))}
+
 
 # Create Model
 m = gp.Model('CVRP')
 
 # Adding variables
-x = m.addVars(x,vtype = gp.GRB.BINARY,name='x')
-u = m.addVars(clients,vtype = gp.GRB.CONTINUOUS,name='u')
+x = m.addVars(arcs,vtype = GRB.BINARY,name='x')
+print(x[0,1])
+u = m.addVars(clients,vtype = GRB.CONTINUOUS,name='u')
 
 # Objective Function
-m.setObjective(gp.quicksum(c[i]*x[i]for i in nodes),gp.GBR.MINIMIZE)
+m.setObjective(gp.quicksum(c[i,j]*x[i,j] for i,j in arcs),GRB.MINIMIZE)
 
-#adri
-
-# fede
+#Constrains
+#m.addConstrs(gp.quicksum(x[i,j] for i in range(len(arcs)) if j==arcs[i][1]) == 1 for j in clients)
 
 
 
