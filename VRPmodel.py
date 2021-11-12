@@ -16,7 +16,7 @@ import numpy as np
 # Nodes
 n = 7
 clients = [ i for i in range(n-1) if i !=0]
-nodes = [0]+clients+[n-1]
+nodes = [0]+clients
 
 # not connected!
 #arcs = [(0,1),(0,2), (0,5), (1,2),(1,3),(1,4),(1,5),(1,6),(2,3),(2,6),(3,4),(4,5),(5,6),(2,1),(3,1),(4,1),(5,1),(3,2),(4,3),(5,4)]
@@ -32,7 +32,7 @@ np.random.seed(0)
 q = {n:np.random.randint(10,15) for n in clients}
 #q[0] = 0
 #q[6] = 0
-Q = 50
+Q = 1000
 
 # Create Model
 m = gp.Model('CVRP')
@@ -57,4 +57,16 @@ m.addConstrs(gp.quicksum(x[i,j] for i in nodes if j!= i) == 1 for j in clients)
 # third constraint: avoid subtours (TO TAKE OUT LATER)
 m.addConstrs((x[i,j]==1) >> (u[i]+q[j]== u[j]) for i,j in arcs if j!=0 and i!=0)
 
-print(len(arcs),clients)
+m.addConstrs(u[i]>=q[i] for i in clients)
+#m.addConstrs(u[i]<= Q for i in clients)
+
+
+
+#m.Params.timeLimit = 60
+#m.Params.MIPGap = 0.1
+
+m.optimize()
+
+for v in m.getVars():
+    if v.x > 00.9:
+        print(str(v.VarName)+ '=' + str(v.x))

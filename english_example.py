@@ -63,7 +63,7 @@ for i, j in active_arcs:
 plt.plot(xc[0], yc[0], c='r', marker='s')
 plt.scatter(xc[1:], yc[1:], c='b')
 
-
+plt.show()
 
 
 
