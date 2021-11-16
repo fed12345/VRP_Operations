@@ -14,11 +14,11 @@ rnd.seed(0)
 def solve_VRP(drones,clients_list,time_limit):
     # Basic problem variables
     n = Clients.numeber_of_clients # nodes
-    clients = [ i for i in range(n-1) if i !=0]
+    clients = [ i for i in range(1,n+1)]
     nodes = [0]+clients
     N_N_0 = [(i,j) for i in nodes for j in clients if i!=j]
-    xc = [xc.x_coord for xc in clients_list] # customer x locations
-    yc = [yc.y_coord for yc in clients_list] #rnd.rand(n-1)*100 # customer y locations
+    xc = [0]+[xc.x_coord for xc in clients_list] # customer x locations
+    yc = [0]+[yc.y_coord for yc in clients_list] #rnd.rand(n-1)*100 # customer y locations
     print(type(xc))
     T = time_limit # [s] total delivery duration
 
