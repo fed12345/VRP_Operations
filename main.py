@@ -101,6 +101,7 @@ def sensitivity(clients_range):
         T = 60 # [s] total delivery duration
         
         client_list = []
+        Clients.numeber_of_clients = 0 
         for i in range(1,c):
             client = Clients(i, rnd.rand(1)[0]*100,rnd.rand(1)[0]*200, rnd.randint(1,5))
             client_list.append(client)
@@ -117,19 +118,20 @@ def sensitivity(clients_range):
         
 #SAMPLE DATASET
 
-drone1 = Drones("Amazon Drone", 10, 5, 5)#(name, maxspeed, maxpayload, number_of_drones)
+#drone1 = Drones("Amazon Drone", 10, 5, 5)#(name, maxspeed, maxpayload, number_of_drones)
 
-client_list = []
-for i in range(1,1):
-    client = Clients(i, rnd.rand(1)[0]*100,rnd.rand(1)[0]*200, rnd.randint(1,5))
-    client_list.append(client)
+#client_list = []
+#for i in range(1,1):
+#    client = Clients(i, rnd.rand(1)[0]*100,rnd.rand(1)[0]*200, rnd.randint(1,5))
+#   client_list.append(client)
 
-T = 60 # [s] total delivery duration
+#T = 60 # [s] total delivery duration
 
 
 
 if __name__== "__main__":
-    solve_VRP(drone1,client_list, T, Plotting = True)
+    #solve_VRP(drone1,client_list, T, Plotting = True)
+    sensitivity(5)
     
 
 
