@@ -75,6 +75,8 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
 
     m.Params.timeLimit = 100 #[s]
     m.optimize()
+    obj = m.getObjective()
+    print('Objective == ',obj.getValue())
 
     if Plotting == True:
 
@@ -87,14 +89,17 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
         plt.scatter(xc[1:], yc[1:], c='b')
 
         plt.show()
+    
+    m.optimize()
+    obj = m.getObjective()
+    return obj.getValue() # returning final objective function value
 
-# SENSITIVITY ANALYSIS
 
-def sensitivity(clients_range):
+def sensitivity(clients_range, maxspeed_range):
 
     # TEST 1: number of clients vs run time
     x_1 = [] # number of clients
-    t_1 = [] # run times
+    y_1 = [] # run times
 
     for c in range(2,clients_range+1):
         drone = Drones("Amazon Drone", 10, 5, 5)#(name, maxspeed, maxpayload, number_of_drones)
@@ -105,30 +110,45 @@ def sensitivity(clients_range):
         for i in range(1,c):
             client = Clients(i, rnd.rand(1)[0]*100,rnd.rand(1)[0]*200, rnd.randint(1,5))
             client_list.append(client)
-        print(len(client_list))
 
         # Appending run time for c number of clients
         start = timeit.default_timer()
         solve_VRP(drone,client_list, T,False)
         stop = timeit.default_timer()
         time = round(stop-start,3)
-        t_1.append(time)
+        y_1.append(time)
         x_1.append(c)
         client_list = []
+               
+    # TEST 2: max speed vs objective function
+    x_2 = [] # max speed
+    y_2 = [] # ojective value
+            
+    # PLOTTING
+    
+    # Test 1
+    plt.plot(x_1,y_1)
+    plt.xlabel("Amount of clients")
+    plt.ylabel("Run time [s]")
+    plt.title('Run time as a function of amount of clients')
+    plt.show()
+    
+    
+    
+    
 
 #SAMPLE DATASET
+drone1 = Drones("Amazon Drone", 10, 5, 5)#(name, maxspeed, maxpayload, number_of_drones)
 
-#drone1 = Drones("Amazon Drone", 10, 5, 5)#(name, maxspeed, maxpayload, number_of_drones)
+client_list = []
+for i in range(1,11):
+    client = Clients(i, rnd.rand(1)[0]*100,rnd.rand(1)[0]*200, rnd.randint(1,5))
+    client_list.append(client)
 
-#client_list = []
-#for i in range(1,1):
-#    client = Clients(i, rnd.rand(1)[0]*100,rnd.rand(1)[0]*200, rnd.randint(1,5))
-#   client_list.append(client)
-
-#T = 60 # [s] total delivery duration
+T = 60 # [s] total delivery duration
 
 
 
 if __name__== "__main__":
-    #solve_VRP(drone1,client_list, T, Plotting = True)
-    sensitivity(5)
+    solve_VRP(drone1,client_list, T, Plotting = True)
+    #sensitivity(12,5)
