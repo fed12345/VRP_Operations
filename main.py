@@ -1,9 +1,11 @@
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import gurobipy as gp
 from gurobipy import GRB
 from data import Drones, Clients
 import timeit
+from geopy.distance import geodesic
 
 #Initialization
 rnd = np.random
@@ -18,9 +20,8 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     clients = [ i for i in range(1,n+1)]
     nodes = [0]+clients
     N_N_0 = [(i,j) for i in nodes for j in clients if i!=j]
-    xc = [0]+[xc.x_coord for xc in clients_list] # customer x locations
-    yc = [0]+[yc.y_coord for yc in clients_list] #rnd.rand(n-1)*100 # customer y locations
-    print(type(xc))
+    lat= [Clients.depo_location[0]]+[xc.lat for xc in clients_list] # customer x locations
+    long = [Clients.depo_location[1]]+[yc.long for yc in clients_list] #rnd.rand(n-1)*100 # customer y locations
     T = time_limit # [s] total delivery duration
 
     # Drone parameters
@@ -35,9 +36,13 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     y = arcs # payload weight between paths
     t = [i for i in nodes] # time at node i
     a = [i for i in clients] # time between node i and depot
+    z = a # The energy consumed from a drone’s battery by the time it arrives at the depot directly after leaving
+    f = t #Enegry cosumed at location i
+
+
 
     # Costs
-    s = {(i, j): np.hypot(xc[i]-xc[j], yc[i]-yc[j]) for i, j in arcs} # euclidean distances
+    s = {(i, j): geodesic((lat[i],long[i]),(lat[j],long[j])).km for i, j in arcs} # euclidean distances
     D = {i.number: i.demand for i in clients_list}# demand of client rnd.randint(1,5)
 
 
@@ -50,6 +55,8 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     y = m.addVars(y,vtype = GRB.CONTINUOUS,name='y')
     t = m.addVars(t,vtype = GRB.CONTINUOUS,name='t')
     a = m.addVars(a,vtype = GRB.CONTINUOUS,name='a')
+    f = m.addVars(f,vtype = GRB.CONTINUOUS,name='f')
+    z = m.addVars(z,vtype = GRB.CONTINUOUS,name='z')
 
     # Objective function
     m.setObjective(gp.quicksum(s[i,j]*x[i,j] for i,j in arcs),GRB.MINIMIZE)
@@ -58,42 +65,56 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     m.addConstrs(gp.quicksum(x[i,j] for j in nodes if j!= i) == 1 for i in clients) # (4a)
     m.addConstrs(gp.quicksum(x[i,j] for j in nodes if j!= i)-gp.quicksum(x[j,i] for j in nodes if j!= i)== 0 for i in nodes ) #(4b)
     #Reusability Constrains
-    m.addConstrs(gp.quicksum(sigma[i,j] for j in clients) <= x[i,0] for i in clients) # (5a)
+    m.addConstrs((gp.quicksum(sigma[i,j] for j in clients) <= x[i,0] for i in clients),name = 'Resusability') # (5a)
     m.addConstrs(gp.quicksum(sigma[j,i] for j in clients) <= x[0,i] for i in clients) # (5b)
     m.addConstr(gp.quicksum(x[0,i] for i in clients) - gp.quicksum(sigma[i,j] for i,j in sigma_var if i!=j) <= M) # (5c)
     #Demand Contrains
-    m.addConstrs(gp.quicksum(y[j,i] for j in nodes if j!=i) - gp.quicksum(y[i,j] for j in nodes if j!=i)==D[i] for i in clients) # (6a)
+    m.addConstrs((gp.quicksum(y[j,i] for j in nodes if j!=i) - gp.quicksum(y[i,j] for j in nodes if j!=i)==D[i] for i in clients), name = 'Demand') # (6a)
     m.addConstrs(y[i,j] <= K*x[i,j] for i,j in arcs if i!=j) # (6b)
     #Time Constrains
-    m.addConstrs(t[i] - t[j] + s[i,j]/v <= K* (1-x[i,j]) for i,j in N_N_0 if i!=j) # (7a)
+    m.addConstrs((t[i] - t[j] + s[i,j]/v <= K* (1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Time') # (7a)
     m.addConstrs(t[i] - a[i] + s[i,0]/v <= K * (1 - x[i,0]) for i in clients) # (7b)
     m.addConstrs(a[i] - t[j] + s[0,j]/v <= K * (1 - sigma[i,j]) for i,j in sigma_var if i!=j) # (7c)
     m.addConstrs(t[i] <= T  for i in clients) # (7d)  and (7e) CHECK THIS CONSTRAINT
-    #
-    m.addConstrs(y[i,j] <= Q * x[i,j] for i,j in arcs if i!=j) #(8a)
+    # Capacity Constrains
+    m.addConstrs((y[i,j] <= Q * x[i,j] for i,j in arcs if i!=j), name = 'Capacity') #(8a)
+    #Energy Contrains
+    m.addConstrs((f[i] - f[j] + power(y[i,j])*s[i,j]/v <= K*(1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Enegry')#(9a)
+    m.addConstrs(f[i] - z[i] + power(y[i,0])*s[i,0]/v <= K * (1 - x[i,0]) for i in clients)#(9b) 
+    m.addConstrs(z[i]<= K*x[i,0] for i in clients)
 
+
+    m.update()
+    #Writing LP file
+    m.write('model.lp') 
 
     m.Params.timeLimit = 100 #[s]
     m.optimize()
-    obj = m.getObjective()
-    print('Objective == ',obj.getValue())
-
     if Plotting == True:
-
         #Plotting
+        BBox = ((min(long),   max(long),  min(lat), max(lat)))
+        ruh_m = plt.imread('map.png')
+
         active_arcs = [a for a in arcs if x[a].x > 0.99]
-
+        fig, ax = plt.subplots(figsize = (8,7))
         for i, j in active_arcs:
-            plt.plot([xc[i], xc[j]], [yc[i], yc[j]], c='g', zorder=0)
-        plt.plot(xc[0], yc[0], c='r', marker='s')
-        plt.scatter(xc[1:], yc[1:], c='b')
-
+            ax.plot([long[i], long[j]], [lat[i], lat[j]], c='g', linestyle= ':', zorder=1)
+        ax.plot(long[0], lat[0], c='r', marker='s')
+        ax.scatter(long[1:], lat[1:], c='b')
+        ax.set_xlim(BBox[0],BBox[1])
+        ax.set_ylim(BBox[2],BBox[3])
+        
+        ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
         plt.show()
-    
-    m.optimize()
     obj = m.getObjective()
     return obj.getValue() # returning final objective function value
 
+
+
+
+def power(mass): #TODO: Move this to drone class function and find a performance graph and extrapolate the constant
+    p = 46.7*mass + 26.9
+    return p/1000
 
 def sensitivity(clients_range, maxspeed_range):
 
@@ -102,8 +123,8 @@ def sensitivity(clients_range, maxspeed_range):
     y_1 = [] # run times
 
     for c in range(2,clients_range+1):
-        drone = Drones("Amazon Drone", 10, 5, 5)#(name, maxspeed, maxpayload, number_of_drones)
-        T = 60 # [s] total delivery duration
+        drone = Drones("Amazon Drone", 200, 500, 5)#(name, maxspeed, maxpayload, number_of_drones)
+        T = 1000000 # [s] total delivery duration
 
         client_list = []
         Clients.numeber_of_clients = 0
@@ -138,14 +159,16 @@ def sensitivity(clients_range, maxspeed_range):
     
 
 #SAMPLE DATASET
-drone1 = Drones("Amazon Drone", 10, 5, 5)#(name, maxspeed, maxpayload, number_of_drones)
+drone1 = Drones("Amazon Drone", 1000, 500, 5)#(name, maxspeed, maxpayload, number_of_drones)
+infile = open('villages_ghana', 'rb')
+list = pickle.load(infile)
 
 client_list = []
-for i in range(1,11):
-    client = Clients(i, rnd.rand(1)[0]*100,rnd.rand(1)[0]*200, rnd.randint(1,5))
+for i in range(1,20):
+    client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
     client_list.append(client)
 
-T = 60 # [s] total delivery duration
+T = 100 # [s] total delivery duration
 
 
 
