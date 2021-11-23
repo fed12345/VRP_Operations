@@ -41,8 +41,6 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     z = a # The energy consumed from a drone’s battery by the time it arrives at the depot directly after leaving
     f = t #Enegry cosumed at location i
 
-
-
     # Costs
     s = {(i, j): geodesic((lat[i],long[i]),(lat[j],long[j])).m for i, j in arcs} # euclidean distances TODO change km to m
     D = {i.number: i.demand for i in clients_list}# demand of client rnd.randint(1,5)
@@ -110,48 +108,71 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
         
         #ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
         plt.show()
+        
+    # output objective function
     obj = m.getObjective()
-    return obj.getValue() # returning final objective function value
+    return obj.getValue() 
 
 
 
 
-def sensitivity(clients_range, maxspeed_range):
-
-    # TEST 1: number of clients vs run time
-    x_1 = [] # number of clients
-    y_1 = [] # run times
-
-    for c in range(2,clients_range+1):
-        drone = Drones("Amazon Drone", 200, 500, 5)#(name, maxspeed, maxpayload, number_of_drones)
-        T = 1000000 # [s] total delivery duration
-
-        client_list = []
-        Clients.numeber_of_clients = 0
-        for i in range(1,c):
-            client = Clients(i, rnd.rand(1)[0]*100,rnd.rand(1)[0]*200, rnd.randint(1,5))
-            client_list.append(client)
-
-        # Appending run time for c number of clients
-        start = timeit.default_timer()
-        solve_VRP(drone,client_list, T,False)
-        stop = timeit.default_timer()
-        time = round(stop-start,3)
-        y_1.append(time)
-        x_1.append(c)
-        client_list = []
+def sensitivity(clients_range, maxspeed_range, maxpayload_range):
+    
+    # CLIENTS LIST
+        
+    # infile = open('villages_burundi', 'rb')
+    # list = pickle.load(infile)
+    
+    # client_list = []
+    # for i in range(1,20):
+    #     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
+    #     client_list.append(client)
                
-    # TEST 2: max speed vs objective function
-    x_2 = [] # max speed
-    y_2 = [] # ojective value
+    # TEST 1: max speed vs objective function
+    x_1 = [] # max speed
+    y_1 = [] # ojective value
+    
+    T = 5500 # [s] total delivery duration   
+    
+    for i in range (30,maxspeed_range+30): #min speed at 30 [m/s]
+        drone = Drones("AAI RQ-7 Shadow", i, 10, 4)#(name, maxspeed, maxpayload, number_of_drones) 
+        
+        # updating plotting lists
+        x_1.append(i)
+        y_1.append(solve_VRP(drone,client_list, T,False))
+        
+        
+    # TEST 2: max payload vs objective function
+    x_2 = []
+    y_2 = []
+    
+    T = 5500 # [s] total delivery duration 
+    
+    for i in range(10,maxpayload_range+10): # min payload of 5 [kg]
+            drone2 = Drones("AAI RQ-7 Shadow", 36, i, 4)#(name, maxspeed, maxpayload, number_of_drones)
             
+            # updating plotting lists
+            x_2.append(i)
+            y_2.append(solve_VRP(drone2,client_list, T,False))
+            
+        
+        
     # PLOTTING
+    fig, (ax1, ax2) = plt.subplots(1, 2)
     
     # Test 1
-    plt.plot(x_1,y_1)
-    plt.xlabel("Amount of clients")
-    plt.ylabel("Run time [s]")
-    plt.title('Run time as a function of amount of clients')
+    ax1.plot(x_1,y_1)
+    #ax1.xlabel("Drone Max speed [m/s]")
+    #ax1.ylabel("Objective Funcntion Value")
+    #ax1.title('Objective Function vs Drone Max Speed')
+    
+    # Test 2
+    ax2.plot(x_2,y_2)
+    #ax2.xlabel("Drone Max Payload [kg]")
+    #ax2.ylabel("Objective Funcntion Value")
+    #ax2.title('Objective Function vs Drone Max Speed')
+    
+    
     plt.show()
     
     
@@ -173,5 +194,5 @@ T = 5500 # [s] total delivery duration
 
 
 if __name__== "__main__":
-    solve_VRP(drone1,client_list, T, Plotting = True)
-    #sensitivity(12,5)
+   solve_VRP(drone1,client_list, T, Plotting = True)
+   # sensitivity(20,5,10)
