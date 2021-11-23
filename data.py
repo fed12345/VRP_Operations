@@ -17,7 +17,7 @@ class Drones():
 
 class Clients():
     numeber_of_clients = 0
-    depo_location = (7.58617, -1.94137)
+    depo_location = (-3.4333, 29.9000)
     def __init__(self,id, number, name, lat, long, demand):
         self.id = id
         self.number = number
@@ -30,7 +30,7 @@ class Clients():
 def create_dataset():
     overpass_url = "http://overpass-api.de/api/interpreter"
     overpass_query = """
-    [out:json];area[name="Ghana"];(node[place="village"](area););out;
+    [out:json];area[name="Burundi"];(node[place="village"](area););out;
     """
     response = requests.get(
         overpass_url, 
@@ -48,7 +48,7 @@ def create_dataset():
             except KeyError:
                 a = 'unnamed'
 
-            coords.append((place['id'],a,place['lat'], place['lon'],50))
+            coords.append((place['id'],a,place['lat'], place['lon'],2))
         print ("Got %s village coordinates!" % len(coords))
     else:
         print("Error")

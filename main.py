@@ -8,6 +8,8 @@ import timeit
 from geopy.distance import geodesic
 
 #Initialization
+#https://towardsdatascience.com/easy-steps-to-plot-geographic-data-on-a-map-python-11217859a2db
+
 rnd = np.random
 rnd.seed(0)
 
@@ -26,7 +28,7 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
 
     # Drone parameters
     M = drones.number_of_drones # Number of drones
-    K = 100 # upper bound payload weight
+    K = 1000000 # upper bound payload weight
     v = drones.maxspeed # drone speed [m/s]
     Q = drones.maxpayload# max drone payload [kg]
 
@@ -42,7 +44,7 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
 
 
     # Costs
-    s = {(i, j): geodesic((lat[i],long[i]),(lat[j],long[j])).km for i, j in arcs} # euclidean distances
+    s = {(i, j): geodesic((lat[i],long[i]),(lat[j],long[j])).m for i, j in arcs} # euclidean distances TODO change km to m
     D = {i.number: i.demand for i in clients_list}# demand of client rnd.randint(1,5)
 
 
@@ -79,8 +81,8 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     # Capacity Constrains
     m.addConstrs((y[i,j] <= Q * x[i,j] for i,j in arcs if i!=j), name = 'Capacity') #(8a)
     #Energy Contrains
-    m.addConstrs((f[i] - f[j] + power(y[i,j])*s[i,j]/v <= K*(1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Enegry')#(9a)
-    m.addConstrs(f[i] - z[i] + power(y[i,0])*s[i,0]/v <= K * (1 - x[i,0]) for i in clients)#(9b) 
+    m.addConstrs((f[i] - f[j] + 28.5*s[i,j]/v <= K*(1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Enegry')#(9a)
+    m.addConstrs(f[i] - z[i] + 28.5*s[i,0]/v <= K * (1 - x[i,0]) for i in clients)#(9b) 
     m.addConstrs(z[i]<= K*x[i,0] for i in clients)
 
 
@@ -88,7 +90,9 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     #Writing LP file
     m.write('model.lp') 
 
-    m.Params.timeLimit = 100 #[s]
+    #m.Params.timeLimit = 200 #[s]
+    m.Params.MIPGap = 5
+
     m.optimize()
     if Plotting == True:
         #Plotting
@@ -104,17 +108,13 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
         ax.set_xlim(BBox[0],BBox[1])
         ax.set_ylim(BBox[2],BBox[3])
         
-        ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
+        #ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
         plt.show()
     obj = m.getObjective()
     return obj.getValue() # returning final objective function value
 
 
 
-
-def power(mass): #TODO: Move this to drone class function and find a performance graph and extrapolate the constant
-    p = 46.7*mass + 26.9
-    return p/1000
 
 def sensitivity(clients_range, maxspeed_range):
 
@@ -159,8 +159,8 @@ def sensitivity(clients_range, maxspeed_range):
     
 
 #SAMPLE DATASET
-drone1 = Drones("Amazon Drone", 1000, 500, 5)#(name, maxspeed, maxpayload, number_of_drones)
-infile = open('villages_ghana', 'rb')
+drone1 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4)#(name, maxspeed, maxpayload, number_of_drones)
+infile = open('villages_burundi', 'rb')
 list = pickle.load(infile)
 
 client_list = []
@@ -168,7 +168,7 @@ for i in range(1,20):
     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
     client_list.append(client)
 
-T = 100 # [s] total delivery duration
+T = 5500 # [s] total delivery duration
 
 
 
