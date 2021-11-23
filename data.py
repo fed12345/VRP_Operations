@@ -53,7 +53,7 @@ def create_dataset():
     else:
         print("Error")
 
-    filename = 'villages_ghana'
+    filename = 'villages_burundi'
     outfile = open(filename,'wb')
     pickle.dump(coords,outfile)
     outfile.close()
