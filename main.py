@@ -117,63 +117,69 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
 
 
 
-def sensitivity(clients_range, maxspeed_range, maxpayload_range):
+def sensitivity(maxspeed_range, maxpayload_range, T_range):
     
-    # CLIENTS LIST
-        
-    # infile = open('villages_burundi', 'rb')
-    # list = pickle.load(infile)
-    
-    # client_list = []
-    # for i in range(1,20):
-    #     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
-    #     client_list.append(client)
-               
-    # TEST 1: max speed vs objective function
+    ### TEST 1: max speed vs objective function ###
+    # Generating arrays for plotting:
     x_1 = [] # max speed
-    y_1 = [] # ojective value
+    y_1 = [] # ojective value    
+    T = 5500 # [s] total delivery duration    
     
-    T = 5500 # [s] total delivery duration   
-    
-    for i in range (30,maxspeed_range+30): #min speed at 30 [m/s]
-        drone = Drones("AAI RQ-7 Shadow", i, 10, 4)#(name, maxspeed, maxpayload, number_of_drones) 
-        
-        # updating plotting lists
+    # Looping through maxspeed values and appending the corresponding obj function
+    for i in range (30,maxspeed_range+30): # min speed at 30 [m/s]
+        drone = Drones("AAI RQ-7 Shadow", i, 10, 4,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)         
+        # updating plotting arrays
         x_1.append(i)
         y_1.append(solve_VRP(drone,client_list, T,False))
+                
         
-        
-    # TEST 2: max payload vs objective function
-    x_2 = []
-    y_2 = []
+    ### TEST 2: max payload vs objective function ###
+    # Generating arrays for  plotting:
+    x_2 = [] # maxpayload
+    y_2 = [] # objective function
+    T = 5500 # [s] total delivery duration   
     
-    T = 5500 # [s] total delivery duration 
-    
-    for i in range(10,maxpayload_range+10): # min payload of 5 [kg]
-            drone2 = Drones("AAI RQ-7 Shadow", 36, i, 4)#(name, maxspeed, maxpayload, number_of_drones)
-            
-            # updating plotting lists
+    # Looping through maxpayload values and appending the corresponding obj function
+    for i in range(10,maxpayload_range+10): # min payload of 10 [kg]
+            drone2 = Drones("AAI RQ-7 Shadow", 36, i, 4,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)            
+            # updating plotting arrays
             x_2.append(i)
             y_2.append(solve_VRP(drone2,client_list, T,False))
             
-        
-        
-    # PLOTTING
+            
+    ### TEST 3: T vs objective function ###
+    # Generating arrays for later plotting:
+    x_3 = [] # T
+    y_3 = [] # objective function
+    drone3 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
+    
+    # Looping through T values and appending the corresponding obj function
+    for i in range(5000,5000+T_range,100): # min T of 5000 [s]
+        # updating plotting arrays
+        x_3.append(i)
+        y_3.append(solve_VRP(drone2,client_list, i,False))
+    
+    ### Plotting results from all tests ###
     fig, (ax1, ax2) = plt.subplots(1, 2)
     
     # Test 1
     ax1.plot(x_1,y_1)
-    #ax1.xlabel("Drone Max speed [m/s]")
-    #ax1.ylabel("Objective Funcntion Value")
-    #ax1.title('Objective Function vs Drone Max Speed')
+    ax1.set_xlabel("Drone Max speed [m/s]")
+    ax1.set_ylabel("Objective Function Value")
+    ax1.set_title('Objective Function vs Drone Max Speed')
     
     # Test 2
     ax2.plot(x_2,y_2)
-    #ax2.xlabel("Drone Max Payload [kg]")
-    #ax2.ylabel("Objective Funcntion Value")
-    #ax2.title('Objective Function vs Drone Max Speed')
+    ax2.set_xlabel("Drone Max Payload [kg]")
+    ax2.set_ylabel("Objective Function Value")
+    ax2.set_title('Objective Function vs Drone Max Payload')
     
-    
+    # Test 3
+    # ax3.plot(x_3,y_3)
+    # ax3.set_xlabel("Total Delivery Duration [s]")
+    # ax3.set_ylabel("Objective Function Value")
+    # ax3.set_title('Objective Function vs Total Delivery Duration')
+        
     plt.show()
     
     
@@ -196,4 +202,4 @@ T = 5500 # [s] total delivery duration
 
 if __name__== "__main__":
    solve_VRP(drone1,client_list, T, Plotting = True)
-   # sensitivity(20,5,10)
+   sensitivity(maxspeed_range = 5,maxpayload_range = 10, T_range = 2000)
