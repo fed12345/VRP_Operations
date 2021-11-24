@@ -9,11 +9,12 @@ rnd.seed(0)
 
 #Initialize
 class Drones():
-    def __init__(self, name, maxspeed, maxpayload, number_of_drones):
+    def __init__(self, name, maxspeed, maxpayload, number_of_drones, power):
         self.name = name
         self.maxspeed = maxspeed
         self.maxpayload = maxpayload
         self.number_of_drones = number_of_drones
+        self.power = power
 
 class Clients():
     numeber_of_clients = 0

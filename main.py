@@ -31,6 +31,7 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     K = 1000000 # upper bound payload weight
     v = drones.maxspeed # drone speed [m/s]
     Q = drones.maxpayload# max drone payload [kg]
+    p = drones.power#Power Consumption [kW]
 
     # Decision variables
     arcs = [(i,j) for i in nodes for j in nodes if i!=j] # fully connected links
@@ -79,8 +80,8 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     # Capacity Constrains
     m.addConstrs((y[i,j] <= Q * x[i,j] for i,j in arcs if i!=j), name = 'Capacity') #(8a)
     #Energy Contrains
-    m.addConstrs((f[i] - f[j] + 28.5*s[i,j]/v <= K*(1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Enegry')#(9a)
-    m.addConstrs(f[i] - z[i] + 28.5*s[i,0]/v <= K * (1 - x[i,0]) for i in clients)#(9b) 
+    m.addConstrs((f[i] - f[j] + p*s[i,j]/v <= K*(1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Enegry')#(9a)
+    m.addConstrs(f[i] - z[i] + p*s[i,0]/v <= K * (1 - x[i,0]) for i in clients)#(9b) 
     m.addConstrs(z[i]<= K*x[i,0] for i in clients)
 
 
@@ -180,7 +181,7 @@ def sensitivity(clients_range, maxspeed_range, maxpayload_range):
     
 
 #SAMPLE DATASET
-drone1 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4)#(name, maxspeed, maxpayload, number_of_drones)
+drone1 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
 infile = open('villages_burundi', 'rb')
 list = pickle.load(infile)
 
