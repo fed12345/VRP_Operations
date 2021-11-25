@@ -117,7 +117,7 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
 
 
 
-def sensitivity(maxspeed_range, maxpayload_range, T_range):
+def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_step, min_drones, max_drones):
     
     ### TEST 1: max speed vs objective function ###
     # Generating arrays for plotting:
@@ -126,7 +126,7 @@ def sensitivity(maxspeed_range, maxpayload_range, T_range):
     T = 5500 # [s] total delivery duration    
     
     # Looping through maxspeed values and appending the corresponding obj function
-    for i in range (30,maxspeed_range+30): # min speed at 30 [m/s]
+    for i in range (min_speed,max_speed): 
         drone = Drones("AAI RQ-7 Shadow", i, 10, 4,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)         
         # updating plotting arrays
         x_1.append(i)
@@ -134,13 +134,13 @@ def sensitivity(maxspeed_range, maxpayload_range, T_range):
                 
         
     ### TEST 2: max payload vs objective function ###
-    # Generating arrays for  plotting:
+    # Generating arrays for plotting:
     x_2 = [] # maxpayload
     y_2 = [] # objective function
     T = 5500 # [s] total delivery duration   
     
     # Looping through maxpayload values and appending the corresponding obj function
-    for i in range(10,maxpayload_range+10): # min payload of 10 [kg]
+    for i in range(min_payload,max_payload): # min payload of 10 [kg]
             drone2 = Drones("AAI RQ-7 Shadow", 36, i, 4,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)            
             # updating plotting arrays
             x_2.append(i)
@@ -154,13 +154,27 @@ def sensitivity(maxspeed_range, maxpayload_range, T_range):
     drone3 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
     
     # Looping through T values and appending the corresponding obj function
-    for i in range(5000,5000+T_range,100): # min T of 5000 [s]
+    for i in range(min_T,max_T,T_step): # min T of 5000 [s]
         # updating plotting arrays
         x_3.append(i)
-        y_3.append(solve_VRP(drone2,client_list, i,False))
+        y_3.append(solve_VRP(drone3,client_list, i,False))
+    
+    
+    ### TEST 4: number of drones vs objective function ###
+    # Generating arrays for later plotting:
+    x_4 = [] # nuumber of drones
+    y_4 = [] # objective function
+    T = 5500 # [s] total delivery duration   
+    
+    # Looping through number of drones and appending the corresponding obj function
+    for i in range(min_drones,max_drones):
+        drone4 = Drones("AAI RQ-7 Shadow", 36.1111, 10, i, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
+        x_4.append(i)
+        y_4.append(solve_VRP(drone4,client_list, T,False))
     
     ### Plotting results from all tests ###
-    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+    fig.subplots_adjust( wspace=0.3, hspace = 0.3)
     
     # Test 1
     ax1.plot(x_1,y_1)
@@ -175,10 +189,16 @@ def sensitivity(maxspeed_range, maxpayload_range, T_range):
     ax2.set_title('Objective Function vs Drone Max Payload')
     
     # Test 3
-    # ax3.plot(x_3,y_3)
-    # ax3.set_xlabel("Total Delivery Duration [s]")
-    # ax3.set_ylabel("Objective Function Value")
-    # ax3.set_title('Objective Function vs Total Delivery Duration')
+    ax3.plot(x_3,y_3)
+    ax3.set_xlabel("Total Delivery Duration [s]")
+    ax3.set_ylabel("Objective Function Value")
+    ax3.set_title('Objective Function vs Total Delivery Duration')
+    
+    # Test 4
+    ax4.plot(x_4,y_4)
+    ax4.set_xlabel("Number of Drones")
+    ax4.set_ylabel("Objective Function Value")
+    ax4.set_title('Objective Function vs Number of Drones')   
         
     plt.show()
     
@@ -202,4 +222,24 @@ T = 5500 # [s] total delivery duration
 
 if __name__== "__main__":
    solve_VRP(drone1,client_list, T, Plotting = True)
-   sensitivity(maxspeed_range = 5,maxpayload_range = 10, T_range = 2000)
+   sensitivity(min_speed = 30, max_speed = 35, min_payload = 10, max_payload = 20, min_T = 5000, max_T = 10000, T_step = 100, min_drones = 4, max_drones = 10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
