@@ -90,24 +90,27 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     m.write('model.lp') 
 
     #m.Params.timeLimit = 200 #[s]
-    m.Params.MIPGap = 5
+    m.Params.MIPGap = 0
 
     m.optimize()
     if Plotting == True:
         #Plotting
-        BBox = ((min(long),   max(long),  min(lat), max(lat)))
+
+        BBox = ((min(long)-0.1,   max(long)+0.1,  min(lat)-0.1, max(lat)+0.1))
         ruh_m = plt.imread('map.png')
 
         active_arcs = [a for a in arcs if x[a].x > 0.99]
         fig, ax = plt.subplots(figsize = (8,7))
         for i, j in active_arcs:
             ax.plot([long[i], long[j]], [lat[i], lat[j]], c='g', linestyle= ':', zorder=1)
+            ax.annotate(nodes[i], (long[i]+0.01, lat[i]+0.01))
         ax.plot(long[0], lat[0], c='r', marker='s')
         ax.scatter(long[1:], lat[1:], c='b')
         ax.set_xlim(BBox[0],BBox[1])
         ax.set_ylim(BBox[2],BBox[3])
-        
-        #ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
+
+
+        ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
         plt.show()
         
     # output objective function
@@ -123,10 +126,10 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     # Generating arrays for plotting:
     x_1 = [] # max speed
     y_1 = [] # ojective value    
-    T = 5500 # [s] total delivery duration    
+    T = 5800 # [s] total delivery duration    
     
     # Looping through maxspeed values and appending the corresponding obj function
-    for i in range (min_speed,max_speed): 
+    for i in np.arange(min_speed,max_speed, 0.5): 
         drone = Drones("AAI RQ-7 Shadow", i, 10, 4,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)         
         # updating plotting arrays
         x_1.append(i)
@@ -164,7 +167,7 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     # Generating arrays for later plotting:
     x_4 = [] # nuumber of drones
     y_4 = [] # objective function
-    T = 5500 # [s] total delivery duration   
+    T = 7700 # [s] total delivery duration   
     
     # Looping through number of drones and appending the corresponding obj function
     for i in range(min_drones,max_drones):
@@ -177,25 +180,25 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     fig.subplots_adjust( wspace=0.3, hspace = 0.3)
     
     # Test 1
-    ax1.plot(x_1,y_1)
+    ax1.scatter(x_1,y_1, marker = 'x')
     ax1.set_xlabel("Drone Max speed [m/s]")
     ax1.set_ylabel("Objective Function Value")
     ax1.set_title('Objective Function vs Drone Max Speed')
     
     # Test 2
-    ax2.plot(x_2,y_2)
+    ax2.scatter(x_2,y_2)
     ax2.set_xlabel("Drone Max Payload [kg]")
     ax2.set_ylabel("Objective Function Value")
     ax2.set_title('Objective Function vs Drone Max Payload')
     
     # Test 3
-    ax3.plot(x_3,y_3)
+    ax3.scatter(x_3,y_3)
     ax3.set_xlabel("Total Delivery Duration [s]")
     ax3.set_ylabel("Objective Function Value")
     ax3.set_title('Objective Function vs Total Delivery Duration')
     
     # Test 4
-    ax4.plot(x_4,y_4)
+    ax4.scatter(x_4,y_4)
     ax4.set_xlabel("Number of Drones")
     ax4.set_ylabel("Objective Function Value")
     ax4.set_title('Objective Function vs Number of Drones')   
@@ -212,7 +215,7 @@ infile = open('villages_burundi', 'rb')
 list = pickle.load(infile)
 
 client_list = []
-for i in range(1,20):
+for i in range(1,10):
     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
     client_list.append(client)
 
@@ -221,8 +224,8 @@ T = 5500 # [s] total delivery duration
 
 
 if __name__== "__main__":
-   solve_VRP(drone1,client_list, T, Plotting = True)
-   sensitivity(min_speed = 30, max_speed = 35, min_payload = 10, max_payload = 20, min_T = 5000, max_T = 10000, T_step = 100, min_drones = 4, max_drones = 10)
+    #solve_VRP(drone1,client_list, T, Plotting = True)
+    sensitivity(min_speed = 20, max_speed = 28, min_payload = 5, max_payload = 10, min_T = 3400, max_T = 5000, T_step = 20, min_drones = 1, max_drones = 10)
 
 
 
