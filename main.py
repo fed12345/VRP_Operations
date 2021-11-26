@@ -100,6 +100,7 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
         ruh_m = plt.imread('map.png')
 
         active_arcs = [a for a in arcs if x[a].x > 0.99]
+        sorted_arcs = loop_finder(active_arcs)
         fig, ax = plt.subplots(figsize = (8,7))
         for i, j in active_arcs:
             ax.plot([long[i], long[j]], [lat[i], lat[j]], c='g', linestyle= ':', zorder=1)
@@ -110,13 +111,43 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
         ax.set_ylim(BBox[2],BBox[3])
 
 
-        ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
+        #ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
         plt.show()
         
     # output objective function
     obj = m.getObjective()
     return obj.getValue() 
 
+
+
+def loop_finder(arc):
+    starting_list = []
+    for i in range(0,len(arc)):
+        if arc[i][0] == 0:
+            starting_list.append(arc[i])
+    sorted_list = []
+    for i in range(0, len(starting_list)):
+        sorted_list.append(starting_list[i])
+        j = 0
+        while j < len(arc):
+            j += 1
+            if sorted_list[-1][1]== arc[j][0]:
+                sorted_list.append(arc[j])
+                j = 0 
+            if sorted_list[-1][1]== 0:
+                j = len(arc)
+    index = []
+    for i in range(0,len(sorted_list)):
+        if sorted_list[i][0]== 0:
+            index.append(i)
+    print(len(index))
+    index.append(len(sorted_list))
+    loops = []
+    for i in range(0,len(index)):
+        loops.append(sorted_list[index[i-1]:index[i]])
+    loops = loops[1:]
+    return sorted_list, index
+    
 
 
 
@@ -215,7 +246,7 @@ infile = open('villages_burundi', 'rb')
 list = pickle.load(infile)
 
 client_list = []
-for i in range(1,10):
+for i in range(1,20):
     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
     client_list.append(client)
 
@@ -224,8 +255,8 @@ T = 5500 # [s] total delivery duration
 
 
 if __name__== "__main__":
-    #solve_VRP(drone1,client_list, T, Plotting = True)
-    sensitivity(min_speed = 20, max_speed = 28, min_payload = 5, max_payload = 10, min_T = 3400, max_T = 5000, T_step = 20, min_drones = 1, max_drones = 10)
+    solve_VRP(drone1,client_list, T, Plotting = True)
+    #sensitivity(min_speed = 20, max_speed = 28, min_payload = 5, max_payload = 10, min_T = 3400, max_T = 5000, T_step = 20, min_drones = 1, max_drones = 10)
 
 
 

@@ -28,7 +28,7 @@ class Clients():
         self.demand = demand
         Clients.numeber_of_clients += 1
 
-def create_dataset():
+def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_API_by_Example
     overpass_url = "http://overpass-api.de/api/interpreter"
     overpass_query = """
     [out:json];area[name="Burundi"];(node[place="village"](area););out;
@@ -50,7 +50,7 @@ def create_dataset():
                 a = 'unnamed'
 
             coords.append((place['id'],a,place['lat'], place['lon'],2))
-        print ("Got %s village coordinates!" % len(coords))
+        print (" %s village" % len(coords))
     else:
         print("Error")
 
