@@ -207,32 +207,37 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
         y_4.append(solve_VRP(drone4,client_list, T,False))
     
     ### Plotting results from all tests ###
+    plt.style.use('seaborn-darkgrid')
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
     fig.subplots_adjust( wspace=0.3, hspace = 0.3)
     
     # Test 1
-    ax1.scatter(x_1,y_1, marker = 'x')
-    ax1.set_xlabel("Drone Max speed [m/s]")
-    ax1.set_ylabel("Objective Function Value")
-    ax1.set_title('Objective Function vs Drone Max Speed')
+    ax1.plot(x_1,y_1, color = 'r')
+    ax1.scatter(x_1,y_1, marker = 'o')
+    ax1.set_xlabel("Drone Max speed [m/s]",fontsize=15)
+    ax1.set_ylabel("Objective Function Value",fontsize=15)
+    ax1.set_title('Objective Function vs Drone Max Speed',fontsize=15)
+    ax1.text(0.85, 0.75, 'Begin text', fontsize = 15,horizontalalignment='center', verticalalignment='center',bbox = dict(facecolor = 'red', alpha = 0.5), transform=ax1.transAxes)
+    # ax1.text(-5, 60, 'Parabola $Y = x^2$', fontsize = 22, 
+    #      bbox = dict(facecolor = 'red', alpha = 0.5))
     
     # Test 2
     ax2.scatter(x_2,y_2)
-    ax2.set_xlabel("Drone Max Payload [kg]")
-    ax2.set_ylabel("Objective Function Value")
-    ax2.set_title('Objective Function vs Drone Max Payload')
+    ax2.set_xlabel("Drone Max Payload [kg]",fontsize=15)
+    ax2.set_ylabel("Objective Function Value",fontsize=15)
+    ax2.set_title('Objective Function vs Drone Max Payload',fontsize=15)
     
     # Test 3
     ax3.scatter(x_3,y_3)
-    ax3.set_xlabel("Total Delivery Duration [s]")
-    ax3.set_ylabel("Objective Function Value")
-    ax3.set_title('Objective Function vs Total Delivery Duration')
+    ax3.set_xlabel("Total Delivery Duration [s]",fontsize=15)
+    ax3.set_ylabel("Objective Function Value",fontsize=15)
+    ax3.set_title('Objective Function vs Total Delivery Duration',fontsize=15)
     
     # Test 4
     ax4.scatter(x_4,y_4)
-    ax4.set_xlabel("Number of Drones")
-    ax4.set_ylabel("Objective Function Value")
-    ax4.set_title('Objective Function vs Number of Drones')   
+    ax4.set_xlabel("Number of Drones",fontsize=15)
+    ax4.set_ylabel("Objective Function Value",fontsize=15)
+    ax4.set_title('Objective Function vs Number of Drones',fontsize=15)   
         
     plt.show()
     
@@ -246,7 +251,7 @@ infile = open('villages_burundi', 'rb')
 list = pickle.load(infile)
 
 client_list = []
-for i in range(1,20):
+for i in range(1,10):
     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
     client_list.append(client)
 
@@ -255,9 +260,9 @@ T = 5500 # [s] total delivery duration
 
 
 if __name__== "__main__":
-    solve_VRP(drone1,client_list, T, Plotting = True)
+    # solve_VRP(drone1,client_list, T, Plotting = True)
     #sensitivity(min_speed = 20, max_speed = 28, min_payload = 5, max_payload = 10, min_T = 3400, max_T = 5000, T_step = 20, min_drones = 1, max_drones = 10)
-
+    sensitivity(min_speed = 20, max_speed = 28, min_payload = 10, max_payload = 15, min_T = 3400, max_T = 5000, T_step = 200, min_drones = 1, max_drones = 8)
 
 
 
