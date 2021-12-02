@@ -251,7 +251,7 @@ infile = open('villages_burundi', 'rb')
 list = pickle.load(infile)
 
 client_list = []
-for i in range(1,10):
+for i in range(1,20):
     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
     client_list.append(client)
 
@@ -260,9 +260,9 @@ T = 5500 # [s] total delivery duration
 
 
 if __name__== "__main__":
-    # solve_VRP(drone1,client_list, T, Plotting = True)
+    solve_VRP(drone1,client_list, T, Plotting = True)
     #sensitivity(min_speed = 20, max_speed = 28, min_payload = 5, max_payload = 10, min_T = 3400, max_T = 5000, T_step = 20, min_drones = 1, max_drones = 10)
-    sensitivity(min_speed = 20, max_speed = 28, min_payload = 10, max_payload = 15, min_T = 3400, max_T = 5000, T_step = 200, min_drones = 1, max_drones = 8)
+    #sensitivity(min_speed = 20, max_speed = 28, min_payload = 10, max_payload = 15, min_T = 3400, max_T = 5000, T_step = 200, min_drones = 1, max_drones = 8)
 
 
 
