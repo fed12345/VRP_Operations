@@ -156,36 +156,49 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     ### TEST 1: max speed vs objective function ###
     # Generating arrays for plotting:
     x_1 = [] # max speed
-    y_1 = [] # ojective value    
-    T = 5800 # [s] total delivery duration    
+    y_1 = [] # ojective value   
+    
+    # Fixed variables
+    T1 = 5800 # [s] total delivery duration    
+    number_drones1 = 4
+    maxpayload1 = 10 # [kg]
     
     # Looping through maxspeed values and appending the corresponding obj function
     for i in np.arange(min_speed,max_speed, 0.5): 
-        drone = Drones("AAI RQ-7 Shadow", i, 10, 4,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)         
+        drone = Drones("AAI RQ-7 Shadow", i, maxpayload1,  number_drones1,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)         
         # updating plotting arrays
         x_1.append(i)
-        y_1.append(solve_VRP(drone,client_list, T,False))
+        y_1.append(solve_VRP(drone,client_list, T1,False))
                 
         
     ### TEST 2: max payload vs objective function ###
     # Generating arrays for plotting:
     x_2 = [] # maxpayload
     y_2 = [] # objective function
-    T = 5500 # [s] total delivery duration   
+    
+    # Fixed variables
+    T2 = 5500 # [s] total delivery duration   
+    number_drones2 = 4
+    maxspeed2 = 37 # [m/s]
     
     # Looping through maxpayload values and appending the corresponding obj function
     for i in range(min_payload,max_payload): # min payload of 10 [kg]
-            drone2 = Drones("AAI RQ-7 Shadow", 36, i, 4,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)            
+            drone2 = Drones("AAI RQ-7 Shadow", maxspeed2, i, number_drones2,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)            
             # updating plotting arrays
             x_2.append(i)
-            y_2.append(solve_VRP(drone2,client_list, T,False))
+            y_2.append(solve_VRP(drone2,client_list, T2,False))
             
             
     ### TEST 3: T vs objective function ###
     # Generating arrays for later plotting:
     x_3 = [] # T
     y_3 = [] # objective function
-    drone3 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
+    
+    # Fixed variables
+    number_drones3 = 4
+    maxspeed3 = 37
+    maxpayload3 = 10 # [kg]
+    drone3 = Drones("AAI RQ-7 Shadow", maxspeed3,  maxpayload3, number_drones3, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
     
     # Looping through T values and appending the corresponding obj function
     for i in range(min_T,max_T,T_step): # min T of 5000 [s]
@@ -198,46 +211,68 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     # Generating arrays for later plotting:
     x_4 = [] # nuumber of drones
     y_4 = [] # objective function
-    T = 7700 # [s] total delivery duration   
+    
+    # Fixed variables
+    T4 = 7600 # [s] total delivery duration   
+    maxpayload4 = 10 # [kg]
+    maxspeed4 = 37 # [m/s]
     
     # Looping through number of drones and appending the corresponding obj function
     for i in range(min_drones,max_drones):
-        drone4 = Drones("AAI RQ-7 Shadow", 36.1111, 10, i, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
+        drone4 = Drones("AAI RQ-7 Shadow", maxspeed4, maxpayload4, i, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
         x_4.append(i)
-        y_4.append(solve_VRP(drone4,client_list, T,False))
+        y_4.append(solve_VRP(drone4,client_list, T4,False))
     
     ### Plotting results from all tests ###
     plt.style.use('seaborn-darkgrid')
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
-    fig.subplots_adjust( wspace=0.3, hspace = 0.3)
+    fig.subplots_adjust( wspace=0.3, hspace = 0.5)
+    size = 20
+
     
     # Test 1
-    ax1.plot(x_1,y_1, color = 'r')
-    ax1.scatter(x_1,y_1, marker = 'o')
-    ax1.set_xlabel("Drone Max speed [m/s]",fontsize=15)
-    ax1.set_ylabel("Objective Function Value",fontsize=15)
-    ax1.set_title('Objective Function vs Drone Max Speed',fontsize=15)
-    ax1.text(0.85, 0.75, 'Begin text', fontsize = 15,horizontalalignment='center', verticalalignment='center',bbox = dict(facecolor = 'red', alpha = 0.5), transform=ax1.transAxes)
-    # ax1.text(-5, 60, 'Parabola $Y = x^2$', fontsize = 22, 
-    #      bbox = dict(facecolor = 'red', alpha = 0.5))
+    ax1.plot(x_1,0.001*np.array(y_1), color = 'r',zorder = 1)
+    ax1.scatter(x_1,0.001*np.array(y_1), marker = 'o',s = 30, zorder=2)
+    ax1.tick_params(axis='both', which='major', labelsize=size)
+    ax1.set_xlabel("Drone Max Speed [m/s]",fontsize=size)
+    ax1.set_ylabel("Objective Function [Km]",fontsize=size)
+    ax1.set_title('Objective Function vs Drone Max Speed',fontsize=size)
+    text1 = f'T = {T1} [s]' + f'\nDrones = {number_drones1}' + f'\nMax Payload = {maxpayload1} [Kg] '
+    ax1.text(0.74, 0.8, text1, fontsize = size, multialignment="left",horizontalalignment='center', verticalalignment='center',bbox = dict(facecolor = 'white', alpha = 1), transform=ax1.transAxes)
+    
     
     # Test 2
-    ax2.scatter(x_2,y_2)
-    ax2.set_xlabel("Drone Max Payload [kg]",fontsize=15)
-    ax2.set_ylabel("Objective Function Value",fontsize=15)
-    ax2.set_title('Objective Function vs Drone Max Payload',fontsize=15)
+    ax2.plot(x_2,0.001*np.array(y_2), color = 'r',zorder = 1)
+    ax2.scatter(x_2,0.001*np.array(y_2), marker = 'o',s = 30, zorder=2)
+    ax2.tick_params(axis='both', which='major', labelsize=size)
+    ax2.set_xlabel("Drone Max Payload [kg]",fontsize=size)
+    ax2.set_ylabel("Objective Function [Km]",fontsize=size)
+    ax2.set_title('Objective Function vs Drone Max Payload',fontsize=size)
+    text2 = f'T = {T2} [s]' + f'\nDrones = {number_drones2}' + f'\nMax Speed = {maxspeed2} [m/s] '
+    ax2.text(2.05, 0.8, text2, fontsize = size, multialignment="left",horizontalalignment='center', verticalalignment='center',bbox = dict(facecolor = 'white', alpha = 1), transform=ax1.transAxes)
+    
     
     # Test 3
-    ax3.scatter(x_3,y_3)
-    ax3.set_xlabel("Total Delivery Duration [s]",fontsize=15)
-    ax3.set_ylabel("Objective Function Value",fontsize=15)
-    ax3.set_title('Objective Function vs Total Delivery Duration',fontsize=15)
+    ax3.plot(x_3,0.001*np.array(y_3), color = 'r',zorder = 1)
+    ax3.scatter(x_3,0.001*np.array(y_3), marker = 'o',s = 30, zorder=2)
+    ax3.tick_params(axis='both', which='major', labelsize=size)
+    ax3.set_xlabel("Total Delivery Duration [s]",fontsize=size)
+    ax3.set_ylabel("Objective Function [Km]",fontsize=size)
+    ax3.set_title('Objective Function vs Total Delivery Duration',fontsize=size)
+    text3 = f'Drones = {number_drones2}' + f'\nMax Speed = {maxspeed2} [m/s] ' + f'\nMax Payload = {maxpayload3} [kg]'
+    ax3.text(0.75, -0.7, text3, fontsize = size, multialignment="left",horizontalalignment='center', verticalalignment='center',bbox = dict(facecolor = 'white', alpha = 1), transform=ax1.transAxes)
+    
     
     # Test 4
-    ax4.scatter(x_4,y_4)
-    ax4.set_xlabel("Number of Drones",fontsize=15)
-    ax4.set_ylabel("Objective Function Value",fontsize=15)
-    ax4.set_title('Objective Function vs Number of Drones',fontsize=15)   
+    ax4.plot(x_4,0.001*np.array(y_4), color = 'r',zorder = 1)
+    ax4.scatter(x_4,0.001*np.array(y_4),  marker = 'o',s = 30, zorder=2)
+    ax4.tick_params(axis='both', which='major', labelsize=size)
+    ax4.set_xlabel("Number of Drones",fontsize=size)
+    ax4.set_ylabel("Objective Function [Km]",fontsize=size)
+    ax4.set_title('Objective Function vs Number of Drones',fontsize=size)   
+    text4 = f'T = {T4} [s]' + f'\nMax Speed = {maxspeed4} [m/s] ' + f'\nMax Payload = {maxpayload4} [kg]'
+    ax4.text(2.05, -0.7, text4, fontsize =size, multialignment="left",horizontalalignment='center', verticalalignment='center',bbox = dict(facecolor = 'white', alpha = 1), transform=ax1.transAxes)
+    
         
     plt.show()
     
@@ -251,18 +286,27 @@ infile = open('villages_burundi', 'rb')
 list = pickle.load(infile)
 
 client_list = []
-for i in range(1,20):
+for i in range(1,10):
     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
     client_list.append(client)
 
 T = 5500 # [s] total delivery duration
 
 
-
 if __name__== "__main__":
-    solve_VRP(drone1,client_list, T, Plotting = True)
-    #sensitivity(min_speed = 20, max_speed = 28, min_payload = 5, max_payload = 10, min_T = 3400, max_T = 5000, T_step = 20, min_drones = 1, max_drones = 10)
-    #sensitivity(min_speed = 20, max_speed = 28, min_payload = 10, max_payload = 15, min_T = 3400, max_T = 5000, T_step = 200, min_drones = 1, max_drones = 8)
+    # solve_VRP(drone1,client_list, T, Plotting = True)
+    sensitivity(min_speed = 20, max_speed = 28, min_payload = 4, max_payload = 20, min_T = 3300, max_T = 5000, T_step = 40, min_drones = 1, max_drones = 10)
+   
+
+
+
+
+
+
+
+
+
+
 
 
 
