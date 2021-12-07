@@ -32,6 +32,7 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     v = drones.maxspeed # drone speed [m/s]
     Q = drones.maxpayload# max drone payload [kg]
     p = drones.power#Power Consumption [kW]
+    tao = 60
 
     # Decision variables
     arcs = [(i,j) for i in nodes for j in nodes if i!=j] # fully connected links
@@ -74,14 +75,14 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     m.addConstrs(y[i,j] <= K*x[i,j] for i,j in arcs if i!=j) # (6b)
     #Time Constrains
     m.addConstrs((t[i] - t[j] + s[i,j]/v <= K* (1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Time') # (7a)
-    m.addConstrs(t[i] - a[i] + s[i,0]/v <= K * (1 - x[i,0]) for i in clients) # (7b)
+    m.addConstrs(t[i] - a[i] + + tao + s[i,0]/v <= K * (1 - x[i,0]) for i in clients) # (7b)
     m.addConstrs(a[i] - t[j] + s[0,j]/v <= K * (1 - sigma[i,j]) for i,j in sigma_var if i!=j) # (7c)
     m.addConstrs(t[i] <= T  for i in clients) # (7d)  and (7e) CHECK THIS CONSTRAINT
     # Capacity Constrains
     m.addConstrs((y[i,j] <= Q * x[i,j] for i,j in arcs if i!=j), name = 'Capacity') #(8a)
     #Energy Contrains
     m.addConstrs((f[i] - f[j] + p*s[i,j]/v <= K*(1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Enegry')#(9a)
-    m.addConstrs(f[i] - z[i] + p*s[i,0]/v <= K * (1 - x[i,0]) for i in clients)#(9b) 
+    m.addConstrs(f[i] - z[i] + p*(s[i,0]/v + tao)<= K * (1 - x[i,0]) for i in clients)#(9b) 
     m.addConstrs(z[i]<= K*x[i,0] for i in clients)
 
 
@@ -102,9 +103,12 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
         active_arcs = [a for a in arcs if x[a].x > 0.99]
         sorted_arcs = loop_finder(active_arcs)
         fig, ax = plt.subplots(figsize = (8,7))
-        for i, j in active_arcs:
-            ax.plot([long[i], long[j]], [lat[i], lat[j]], c='g', linestyle= ':', zorder=1)
-            ax.annotate(nodes[i], (long[i]+0.01, lat[i]+0.01))
+        color = ['g','r','b',"y"]
+        linestyle = [':' ]
+        for k in range(len(sorted_arcs)):
+            for i, j in sorted_arcs[k]:
+                ax.plot([long[i], long[j]], [lat[i], lat[j]], c=color[k], linestyle= ':', zorder=1)
+                ax.annotate(nodes[i], (long[i]+0.01, lat[i]+0.01))
         ax.plot(long[0], lat[0], c='r', marker='s')
         ax.scatter(long[1:], lat[1:], c='b')
         ax.set_xlim(BBox[0],BBox[1])
@@ -146,7 +150,7 @@ def loop_finder(arc):
     for i in range(0,len(index)):
         loops.append(sorted_list[index[i-1]:index[i]])
     loops = loops[1:]
-    return sorted_list, index
+    return loops
     
 
 
