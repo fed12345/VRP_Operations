@@ -2,6 +2,8 @@ import numpy as np
 import requests
 import json
 import pickle
+from geopy.distance import geodesic
+import pandas as pd
 #DATASET 
 #Here we create the dataset
 rnd = np.random
@@ -37,26 +39,61 @@ def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass
         overpass_url, 
         params={'data': overpass_query}
     )
-
-    coords = []
+    depo_lat = -3.4333
+    depo_long = 29.9000
+    #coords = []
     if response.status_code == 200:
         data = response.json()
         places = data.get('elements', [])
+        
+        arr1 = []
+        arr2 = []
+        arr3 = []
+        arr4 = []
+        arr5 = []
+        #arr6 = []
+        
+        
         for place in places:
             mydic = place['tags']
             try:
                 a = mydic['name']
             except KeyError:
                 a = 'unnamed'
-
-            coords.append((place['id'],a,place['lat'], place['lon'],2))
-        print (" %s village" % len(coords))
+                
+                
+            dist_from_depo = geodesic((depo_lat,depo_long),(place['lat'],place['lon'])).m
+            arr1.append(place['id'])
+            arr2.append(a)
+            arr3.append(place['lat'])
+            arr4.append(place['lon'])
+            arr5.append(dist_from_depo)
+            #arr6.append(2)
+            
+            #coords.append((place['id'],a,place['lat'], place['lon'],dist_from_depo,2))
+        print(arr1)
+        df = pd.DataFrame({'Name':arr2, 'lat': arr3,
+                           'lon': arr4, 'dist_from_repo': arr5})
+        df.to_csv('villages.csv',index = False)
+        print (" %s village" % len(arr1))
     else:
         print("Error")
 
-    filename = 'villages_burundi'
-    outfile = open(filename,'wb')
-    pickle.dump(coords,outfile)
-    outfile.close()
+    #filename = 'villages_burundi'
+    #outfile = open(filename,'wb')
+    #pickle.dump(coords,outfile)
+    #outfile.close()
 
-#create_dataset()
+create_dataset()
+
+
+
+
+
+
+
+
+
+
+
+
