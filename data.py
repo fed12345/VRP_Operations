@@ -45,7 +45,7 @@ def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass
     if response.status_code == 200:
         data = response.json()
         places = data.get('elements', [])
-        
+        print(places[0])
         arr1 = []
         arr2 = []
         arr3 = []
@@ -62,7 +62,7 @@ def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass
                 a = 'unnamed'
                 
                 
-            dist_from_depo = geodesic((depo_lat,depo_long),(place['lat'],place['lon'])).m
+            dist_from_depo = geodesic((depo_lat,depo_long),(place['lat'],place['lon'])).km
             arr1.append(place['id'])
             arr2.append(a)
             arr3.append(place['lat'])
@@ -71,9 +71,9 @@ def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass
             #arr6.append(2)
             
             #coords.append((place['id'],a,place['lat'], place['lon'],dist_from_depo,2))
-        print(arr1)
+        #print(arr1)
         df = pd.DataFrame({'Name':arr2, 'lat': arr3,
-                           'lon': arr4, 'dist_from_repo': arr5})
+                           'lon': arr4, 'dist_from_depo': arr5})
         df.to_csv('villages.csv',index = False)
         print (" %s village" % len(arr1))
     else:
