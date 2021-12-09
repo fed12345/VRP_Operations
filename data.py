@@ -51,9 +51,10 @@ def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass
         arr3 = []
         arr4 = []
         arr5 = []
-        #arr6 = []
+        arr6 = []
+        arr7 = []
         
-        
+        i = 1
         for place in places:
             mydic = place['tags']
             try:
@@ -68,12 +69,14 @@ def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass
             arr3.append(place['lat'])
             arr4.append(place['lon'])
             arr5.append(dist_from_depo)
-            #arr6.append(2)
+            arr6.append(2)
+            arr7.append(i)
+            i = i + 1
             
             #coords.append((place['id'],a,place['lat'], place['lon'],dist_from_depo,2))
         #print(arr1)
-        df = pd.DataFrame({'Name':arr2, 'lat': arr3,
-                           'lon': arr4, 'dist_from_depo': arr5})
+        df = pd.DataFrame({'id': arr1,'number': arr7, 'Name':arr2, 'lat': arr3,
+                           'lon': arr4, 'dist_from_depo': arr5, 'demand': arr6})
         df.to_csv('villages.csv',index = False)
         print (" %s village" % len(arr1))
     else:
