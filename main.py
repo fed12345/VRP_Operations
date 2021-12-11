@@ -282,10 +282,44 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     plt.show()
     
     
+def runtime(max_clients):
+    #SAMPLE DATASET
+    drone1 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 8, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
+    infile = open('villages_burundi', 'rb')
+    list = pickle.load(infile)
+    T = 100000 # [s] total delivery duration
     
+    #Plotting lists
+    run_times = []
+    number_of_clients = []
+
+    
+    client_list = []
+    for i in range(1,max_clients+1):
+        client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
+        client_list.append(client)
+        
+        # Caculating run time
+        start = timeit.default_timer()
+        solve_VRP(drone1,client_list, T, Plotting = False)
+        stop = timeit.default_timer()
+        run_times.append(round(stop - start,3))
+        number_of_clients.append(i)
+    
+    ### Plotting Results ###
+    plt.style.use('seaborn-darkgrid')
+    plt.plot(number_of_clients,run_times,color='r', linewidth=4.0, zorder = 1)
+    plt.scatter(number_of_clients,run_times, color = 'b',marker = 'o',s = 50, zorder=2)
+    plt.title('Run Time vs Number of Clients',fontsize=40)
+    plt.xlabel('Number of Clients',fontsize=40)
+    plt.ylabel('Run Time [s]',fontsize=40)
+    plt.xticks(fontsize=40)
+    plt.yticks(fontsize=40)
+    
+    plt.show()
     
 
-#SAMPLE DATASET
+# SAMPLE DATASET
 drone1 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
 infile = open('villages_burundi', 'rb')
 list = pickle.load(infile)
@@ -300,8 +334,8 @@ T = 10000 # [s] total delivery duration
 
 if __name__== "__main__":
     solve_VRP(drone1,client_list, T, Plotting = True)
-    #sensitivity(min_speed = 20, max_speed = 28, min_payload = 4, max_payload = 20, min_T = 3300, max_T = 5000, T_step = 40, min_drones = 1, max_drones = 10)
-   
+    # sensitivity(min_speed = 20, max_speed = 28, min_payload = 4, max_payload = 20, min_T = 3300, max_T = 5000, T_step = 40, min_drones = 1, max_drones = 10)
+
 
 
 
