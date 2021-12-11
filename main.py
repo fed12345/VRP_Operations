@@ -99,8 +99,9 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
 
         BBox = ((min(long)-0.1,   max(long)+0.1,  min(lat)-0.1, max(lat)+0.1))
         ruh_m = plt.imread('map.png')
-
+        
         active_arcs = [a for a in arcs if x[a].x > 0.99]
+        
         sorted_arcs = loop_finder(active_arcs)
         fig, ax = plt.subplots(figsize = (8,7))
         color = ['g','r','b',"y"]
@@ -294,12 +295,12 @@ for i in range(1,10):
     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
     client_list.append(client)
 
-T = 5500 # [s] total delivery duration
+T = 10000 # [s] total delivery duration
 
 
 if __name__== "__main__":
-    # solve_VRP(drone1,client_list, T, Plotting = True)
-    sensitivity(min_speed = 20, max_speed = 28, min_payload = 4, max_payload = 20, min_T = 3300, max_T = 5000, T_step = 40, min_drones = 1, max_drones = 10)
+    solve_VRP(drone1,client_list, T, Plotting = True)
+    #sensitivity(min_speed = 20, max_speed = 28, min_payload = 4, max_payload = 20, min_T = 3300, max_T = 5000, T_step = 40, min_drones = 1, max_drones = 10)
    
 
 

@@ -41,11 +41,11 @@ def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass
     )
     depo_lat = -3.4333
     depo_long = 29.9000
-    #coords = []
+    coords = []
     if response.status_code == 200:
         data = response.json()
         places = data.get('elements', [])
-        print(places[0])
+        
         arr1 = []
         arr2 = []
         arr3 = []
@@ -53,6 +53,7 @@ def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass
         arr5 = []
         arr6 = []
         arr7 = []
+        
         
         i = 1
         for place in places:
@@ -73,19 +74,19 @@ def create_dataset(): #https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass
             arr7.append(i)
             i = i + 1
             
-            #coords.append((place['id'],a,place['lat'], place['lon'],dist_from_depo,2))
+            coords.append((place['id'],a,place['lat'], place['lon'],2))
         #print(arr1)
         df = pd.DataFrame({'id': arr1,'number': arr7, 'Name':arr2, 'lat': arr3,
                            'lon': arr4, 'dist_from_depo': arr5, 'demand': arr6})
-        df.to_csv('villages.csv',index = False)
+        #df.to_csv('villages.csv',index = False)
         print (" %s village" % len(arr1))
     else:
         print("Error")
 
-    #filename = 'villages_burundi'
-    #outfile = open(filename,'wb')
-    #pickle.dump(coords,outfile)
-    #outfile.close()
+    filename = 'villages_burundi'
+    outfile = open(filename,'wb')
+    pickle.dump(coords,outfile)
+    outfile.close()
 
 create_dataset()
 
