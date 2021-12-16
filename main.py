@@ -6,6 +6,7 @@ from gurobipy import GRB
 from data import Drones, Clients
 import timeit
 from geopy.distance import geodesic
+import pandas as pd
 
 #Initialization
 #https://towardsdatascience.com/easy-steps-to-plot-geographic-data-on-a-map-python-11217859a2db
@@ -16,7 +17,7 @@ rnd.seed(0)
 
 #Definitions
 
-def solve_VRP(drones,clients_list,time_limit,Plotting):
+def solve_VRP(drones,clients_list,time_limit,Plotting,cost):
     # Basic problem variables
     n = Clients.numeber_of_clients # nodes
     clients = [ i for i in range(1,n+1)]
@@ -61,7 +62,10 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     z = m.addVars(z,vtype = GRB.CONTINUOUS,name='z')
 
     # Objective function
-    m.setObjective(gp.quicksum(s[i,j]*x[i,j] for i,j in arcs),GRB.MINIMIZE)
+    if cost == True:
+        m.setObjective(750*gp.quicksum(x[0,i] for i in clients)-750*gp.quicksum(sigma[i,j] for i,j in sigma_var if i!=j)+85.680*10**-3*gp.quicksum(z[i] for i in clients),GRB.MINIMIZE)
+    else:
+        m.setObjective(gp.quicksum(s[i,j]*x[i,j] for i,j in arcs),GRB.MINIMIZE)
 
     # Constraints
     m.addConstrs(gp.quicksum(x[i,j] for j in nodes if j!= i) == 1 for i in clients) # (4a)
@@ -75,7 +79,7 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     m.addConstrs(y[i,j] <= K*x[i,j] for i,j in arcs if i!=j) # (6b)
     #Time Constrains
     m.addConstrs((t[i] - t[j] + s[i,j]/v <= K* (1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Time') # (7a)
-    m.addConstrs(t[i] - a[i] + + tao + s[i,0]/v <= K * (1 - x[i,0]) for i in clients) # (7b)
+    m.addConstrs(t[i] - a[i] +  tao + s[i,0]/v <= K * (1 - x[i,0]) for i in clients) # (7b)
     m.addConstrs(a[i] - t[j] + s[0,j]/v <= K * (1 - sigma[i,j]) for i,j in sigma_var if i!=j) # (7c)
     m.addConstrs(t[i] <= T  for i in clients) # (7d)  and (7e) CHECK THIS CONSTRAINT
     # Capacity Constrains
@@ -84,7 +88,6 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
     m.addConstrs((f[i] - f[j] + p*s[i,j]/v <= K*(1-x[i,j]) for i,j in N_N_0 if i!=j), name = 'Enegry')#(9a)
     m.addConstrs(f[i] - z[i] + p*(s[i,0]/v + tao)<= K * (1 - x[i,0]) for i in clients)#(9b) 
     m.addConstrs(z[i]<= K*x[i,0] for i in clients)
-
 
     m.update()
     #Writing LP file
@@ -98,13 +101,14 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
         #Plotting
 
         BBox = ((min(long)-0.1,   max(long)+0.1,  min(lat)-0.1, max(lat)+0.1))
+        plt.style.use('seaborn-darkgrid')
         ruh_m = plt.imread('map.png')
         
         active_arcs = [a for a in arcs if x[a].x > 0.99]
         
         sorted_arcs = loop_finder(active_arcs)
-        fig, ax = plt.subplots(figsize = (8,7))
-        color = ['g','r','b',"y"]
+        fig, ax = plt.subplots(figsize = (9,9))
+        color = ['g','r','b',"y",'m','c','k','lime']
         linestyle = [':' ]
         for k in range(len(sorted_arcs)):
             for i, j in sorted_arcs[k]:
@@ -114,14 +118,19 @@ def solve_VRP(drones,clients_list,time_limit,Plotting):
         ax.scatter(long[1:], lat[1:], c='b')
         ax.set_xlim(BBox[0],BBox[1])
         ax.set_ylim(BBox[2],BBox[3])
+        ax.set_title('Drone Routing Burundi')
+        ax.set_xlabel('Longitude[-]')
+        ax.set_ylabel('Latitude[-]')
 
 
         #ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
         plt.show()
         
     # output objective function
+    dis = gp.quicksum(s[i,j]*x[i,j] for i,j in arcs)
+
     obj = m.getObjective()
-    return obj.getValue() 
+    return obj.getValue(), dis.getValue()
 
 
 
@@ -164,7 +173,7 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     y_1 = [] # ojective value   
     
     # Fixed variables
-    T1 = 5800 # [s] total delivery duration    
+    T1 = 10000 # [s] total delivery duration    
     number_drones1 = 4
     maxpayload1 = 10 # [kg]
     
@@ -173,7 +182,7 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
         drone = Drones("AAI RQ-7 Shadow", i, maxpayload1,  number_drones1,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)         
         # updating plotting arrays
         x_1.append(i)
-        y_1.append(solve_VRP(drone,client_list, T1,False))
+        y_1.append(solve_VRP(drone,client_list, T1,False,False)[0])
                 
         
     ### TEST 2: max payload vs objective function ###
@@ -191,7 +200,7 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
             drone2 = Drones("AAI RQ-7 Shadow", maxspeed2, i, number_drones2,28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)            
             # updating plotting arrays
             x_2.append(i)
-            y_2.append(solve_VRP(drone2,client_list, T2,False))
+            y_2.append(solve_VRP(drone2,client_list, T2,False,False)[0])
             
             
     ### TEST 3: T vs objective function ###
@@ -209,7 +218,7 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     for i in range(min_T,max_T,T_step): # min T of 5000 [s]
         # updating plotting arrays
         x_3.append(i)
-        y_3.append(solve_VRP(drone3,client_list, i,False))
+        y_3.append(solve_VRP(drone3,client_list, i,False,False)[0])
     
     
     ### TEST 4: number of drones vs objective function ###
@@ -226,7 +235,7 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     for i in range(min_drones,max_drones):
         drone4 = Drones("AAI RQ-7 Shadow", maxspeed4, maxpayload4, i, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
         x_4.append(i)
-        y_4.append(solve_VRP(drone4,client_list, T4,False))
+        y_4.append(solve_VRP(drone4,client_list, T4,False,False)[0])
     
     ### Plotting results from all tests ###
     plt.style.use('seaborn-darkgrid')
@@ -284,43 +293,89 @@ def sensitivity(min_speed, max_speed, min_payload, max_payload, min_T, max_T, T_
     
 def runtime(max_clients):
     #SAMPLE DATASET
-    drone1 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 8, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
+    drone1 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
     infile = open('villages_burundi', 'rb')
     list = pickle.load(infile)
-    T = 100000 # [s] total delivery duration
+    T = 10000 # [s] total delivery duration
     
     #Plotting lists
     run_times = []
+    differenceof = []
     number_of_clients = []
 
     
-    client_list = []
-    for i in range(1,max_clients+1):
-        client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
-        client_list.append(client)
+    
+    for i in range(3,max_clients+1):
+        Clients.numeber_of_clients = 0
+        client_list = []
+        for j in range(1,i):
+            client = Clients(list[i+20][0],j,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
+            client_list.append(client)
         
         # Caculating run time
         start = timeit.default_timer()
-        solve_VRP(drone1,client_list, T, Plotting = False)
+        objc= solve_VRP(drone1,client_list, T, Plotting = False, cost = True)[1] 
         stop = timeit.default_timer()
-        run_times.append(round(stop - start,3))
+        diffc = stop - start
+        start = timeit.default_timer()
+        objd = solve_VRP(drone1,client_list, T, Plotting = False, cost = False)[0]
+        stop = timeit.default_timer()
+        diffd = stop - start
+        difference = objc - objd
+      
+        run_times.append(diffc-diffd)
+        differenceof.append(difference)
         number_of_clients.append(i)
     
     ### Plotting Results ###
     plt.style.use('seaborn-darkgrid')
-    plt.plot(number_of_clients,run_times,color='r', linewidth=4.0, zorder = 1)
-    plt.scatter(number_of_clients,run_times, color = 'b',marker = 'o',s = 50, zorder=2)
-    plt.title('Run Time vs Number of Clients',fontsize=40)
-    plt.xlabel('Number of Clients',fontsize=40)
-    plt.ylabel('Run Time [s]',fontsize=40)
-    plt.xticks(fontsize=40)
-    plt.yticks(fontsize=40)
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    ax1.scatter(number_of_clients,differenceof, color = 'b',marker = 'o', zorder=2)
+    ax1.plot(number_of_clients,differenceof, color = 'r',zorder = 1)
+    ax1.set_title('Cost and Distance Optimization Difference')
+    ax1.set_xlabel('Number of Clients')
+    ax1.set_ylabel('Difference in Optimal Distance[m]')
+    ax2.scatter(number_of_clients,run_times, color = 'b',marker = 'o', zorder=2)
+    ax2.plot(number_of_clients,run_times, color = 'r',zorder = 1)
+    ax2.set_title('Cost and Distance Runtime Difference')
+    ax2.set_xlabel('Number of Clients')
+    ax2.set_ylabel('Difference Runtime[s]')
+    
+    plt.xticks()
+    plt.yticks()
     
     plt.show()
     
 
 # SAMPLE DATASET
-drone1 = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
+Clients.number_of_clients = 0
+drones = Drones("AAI RQ-7 Shadow", 36.1111, 10, 4, 28.5)#(name, maxspeed, maxpayload, number_of_drones, power consumtion)
+client_list = []
+'''
+#DATA SET FOR NICE VILLAGE ARRAGEMENT
+client_df = pd.read_csv('villages.csv')
+
+client_50 = client_df[(client_df['dist_from_depo'] > 35) & (client_df['dist_from_depo'] < 100)] # 248 villages
+depo_long = 29.9000
+depo_lat  = -3.4333
+
+nvxc = 3
+
+client_50_ul = client_50[(client_50['lat'] - depo_lat > 0 ) & (client_50['lon'] - depo_long < 0)].sample(n = nvxc)
+client_50_ur = client_50[(client_50['lat'] - depo_lat > 0 ) & (client_50['lon'] - depo_long > 0)].sample(n = nvxc)
+client_50_ll = client_50[(client_50['lat'] - depo_lat < 0 ) & (client_50['lon'] - depo_long < 0)].sample(n = nvxc)
+client_50_lr = client_50[(client_50['lat'] - depo_lat < 0 ) & (client_50['lon'] - depo_long > 0)].sample(n = nvxc)
+client_50 = pd.concat([client_50_ul,client_50_ur,client_50_ll,client_50_lr])
+
+u = 1
+for index, i in client_50.iterrows():
+    
+    Client = Clients(i['id'], u,i['Name'],i['lat'],i['lon'],i['demand'])
+    client_list.append(Client)
+    u = u + 1
+
+'''
+#DIFFERENT SAMPLE SET WITH MORE FLEXIBLE AMOUNT OF CLIENTS
 infile = open('villages_burundi', 'rb')
 list = pickle.load(infile)
 
@@ -329,12 +384,12 @@ for i in range(1,10):
     client = Clients(list[i+20][0],i,list[i+20][1],list[i+20][2],list[i+20][3],list[i+20][4])
     client_list.append(client)
 
+
 T = 10000 # [s] total delivery duration
-
-
 if __name__== "__main__":
-    solve_VRP(drone1,client_list, T, Plotting = True)
-    # sensitivity(min_speed = 20, max_speed = 28, min_payload = 4, max_payload = 20, min_T = 3300, max_T = 5000, T_step = 40, min_drones = 1, max_drones = 10)
+    solve_VRP(drones,client_list, T, Plotting = True, cost = False)
+    sensitivity(min_speed = 25, max_speed = 28, min_payload = 4, max_payload = 20, min_T = 3300, max_T = 5000, T_step = 40, min_drones = 1, max_drones = 10)
+    #runtime(9)
 
 
 
